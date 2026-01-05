@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Harmony Trainer Pro v2.1</title>
+    <title>Harmony Trainer v3.1</title>
     <style>
         /* --- STILE ESTETICO (Dark Plugin Theme) --- */
         :root {
@@ -90,10 +90,15 @@
             background: radial-gradient(circle at top left, #2a2a2a, #1a1a1a);
             border: 1px solid #333;
             border-radius: 16px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
             text-align: center;
             position: relative;
+            min-height: 240px; /* Aumentato un po' per il testo grande */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .led {
@@ -120,23 +125,69 @@
         }
 
         .key-display {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             color: var(--accent-cyan);
-            margin-bottom: 12px;
+            margin-bottom: 5px;
             text-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
             line-height: 1;
         }
 
-        .divider { height: 1px; background: #333; width: 80%; margin: 10px auto; }
+        .divider { height: 1px; background: #333; width: 80%; margin: 8px auto; }
 
         .degree-display {
-            font-size: 50px;
+            font-size: 42px;
             font-weight: bold;
             color: var(--accent-gold);
             margin: 5px 0;
             text-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
             line-height: 1;
+        }
+
+        /* RECAP SECTION (MODIFICATO PER VISIBILITÀ) */
+        .recap-container {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #444;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+        .recap-container.visible { opacity: 1; }
+        
+        .recap-title {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        
+        .recap-sequence {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap; /* Per schermi molto piccoli */
+        }
+
+        /* STILE ACCORDI RECAP */
+        .recap-chord {
+            font-size: 20px; /* Molto più grande */
+            font-weight: bold;
+            color: #777;
+        }
+
+        .recap-chord.highlight {
+            color: var(--accent-gold);
+            font-size: 24px; /* Ancora più grande per quello attivo */
+            text-shadow: 0 0 5px rgba(251,191,36,0.3);
+            border-bottom: 2px solid var(--accent-gold);
+        }
+
+        .arrow {
+            font-size: 14px;
+            color: #444;
         }
 
         /* GRID BOTTONI */
@@ -181,7 +232,7 @@
 
     <div id="app">
         <div class="header">
-            <div>HARMONY UNIT <span style="color:#444">v2.1</span></div>
+            <div>HARMONY UNIT <span style="color:#444">v3.1</span></div>
             <div>
                 SCORE <span id="scoreVal" class="stat-value">0</span>
                 <span style="color:#444; margin:0 5px">|</span>
@@ -197,11 +248,20 @@
 
         <div id="devicePanel" class="device-panel">
             <div id="statusLed" class="led"></div>
-            <span class="screen-label">Current Key</span>
-            <div id="keyDisplay" class="key-display">C Minor</div>
-            <div class="divider"></div>
-            <span class="screen-label">Identify Degree</span>
-            <div id="degreeDisplay" class="degree-display">V</div>
+            
+            <div id="questionArea">
+                <span class="screen-label">Current Key</span>
+                <div id="keyDisplay" class="key-display">C Minor</div>
+                <div class="divider"></div>
+                <span class="screen-label">Identify Degree</span>
+                <div id="degreeDisplay" class="degree-display">V</div>
+            </div>
+
+            <div id="recapArea" class="recap-container">
+                <div class="recap-title">PROGRESSION RECAP</div>
+                <div id="recapSequence" class="recap-sequence">
+                    </div>
+            </div>
         </div>
 
         <div id="optionsGrid" class="btn-grid">
@@ -210,8 +270,6 @@
 
     <script>
         // --- DATABASE MUSICALE (II-V-I) ---
-        // Nota: Il 'I' grado esiste nel DB per usarlo come distrattore o per riferimento,
-        // ma non verrà chiesto come domanda.
         const musicData = {
             "C":  { maj: ["Dm7", "G7", "Cmaj7"], min: ["Dm7b5", "G7b9", "CmMaj7"] },
             "F":  { maj: ["Gm7", "C7", "Fmaj7"], min: ["Gm7b5", "C7b9", "FmMaj7"] },
@@ -228,10 +286,8 @@
         };
 
         const keys = Object.keys(musicData);
-        // Mappatura solo per II e V. Il I non viene chiesto.
         const degreesMap = ["II", "V"]; 
         
-        // Pool globale (contiene anche i I gradi come possibili risposte sbagliate)
         const allChordsPool = [];
         keys.forEach(k => {
             allChordsPool.push(...musicData[k].maj);
@@ -244,6 +300,9 @@
         let currentModeSetting = 'mix'; 
         let currentCorrectAnswer = "";
         let isInputLocked = false;
+        
+        let currentFullProgression = []; 
+        let currentTargetIndex = 0;
 
         // --- DOM ---
         const uiScore = document.getElementById('scoreVal');
@@ -253,7 +312,8 @@
         const uiGrid = document.getElementById('optionsGrid');
         const uiPanel = document.getElementById('devicePanel');
         const uiLed = document.getElementById('statusLed');
-        
+        const uiRecapArea = document.getElementById('recapArea');
+        const uiRecapSeq = document.getElementById('recapSequence');
         const btnMaj = document.getElementById('btnMaj');
         const btnMin = document.getElementById('btnMin');
         const btnMix = document.getElementById('btnMix');
@@ -263,11 +323,9 @@
             btnMaj.classList.remove('active');
             btnMin.classList.remove('active');
             btnMix.classList.remove('active');
-            
             if(mode === 'maj') btnMaj.classList.add('active');
             if(mode === 'min') btnMin.classList.add('active');
             if(mode === 'mix') btnMix.classList.add('active');
-
             streak = 0;
             score = 0;
             updateStats();
@@ -278,34 +336,27 @@
             isInputLocked = false;
             uiPanel.classList.remove('shake');
             uiLed.className = 'led';
+            uiRecapArea.classList.remove('visible');
 
-            // 1. Determina Modo
             let roundMode = 'maj';
             if (currentModeSetting === 'maj') roundMode = 'maj';
             else if (currentModeSetting === 'min') roundMode = 'min';
             else roundMode = Math.random() > 0.5 ? 'maj' : 'min';
 
-            // 2. Tonalità e Grado
             const rKey = keys[Math.floor(Math.random() * keys.length)];
-            
-            // MODIFICA CRUCIALE: Sceglie solo 0 (II) o 1 (V).
-            // Moltiplicando * 2 otteniamo solo indici 0 o 1.
             const rDegreeIdx = Math.floor(Math.random() * 2); 
             
-            // 3. Risposta Corretta
             const targetChords = musicData[rKey][roundMode];
+            currentFullProgression = targetChords; 
+            currentTargetIndex = rDegreeIdx;       
             currentCorrectAnswer = targetChords[rDegreeIdx];
             
-            // 4. Update UI
             const modeLabel = roundMode === 'maj' ? "MAJOR" : "MINOR";
             const modeColor = roundMode === 'maj' ? '#22d3ee' : '#f472b6'; 
             
             uiKey.innerHTML = `${rKey} <span style="font-size:0.5em; color:${modeColor}; display:block; margin-top:5px">${modeLabel}</span>`;
-            
-            // Mostra II o V
             uiDegree.textContent = degreesMap[rDegreeIdx];
 
-            // 5. Opzioni (1 giusta + 3 sbagliate)
             let options = [currentCorrectAnswer];
             while(options.length < 4) {
                 const randomChord = allChordsPool[Math.floor(Math.random() * allChordsPool.length)];
@@ -315,7 +366,6 @@
             }
             options.sort(() => Math.random() - 0.5);
 
-            // 6. Genera Bottoni
             uiGrid.innerHTML = '';
             options.forEach(chord => {
                 const btn = document.createElement('button');
@@ -331,26 +381,46 @@
             if(isInputLocked) return;
             isInputLocked = true;
 
-            if(selectedChord === currentCorrectAnswer) {
+            const isCorrect = (selectedChord === currentCorrectAnswer);
+
+            if(isCorrect) {
                 btn.classList.add('correct');
                 uiLed.classList.add('on-green');
                 score += 10;
                 streak++;
-                updateStats();
-                setTimeout(nextQuestion, 500); 
             } else {
                 btn.classList.add('wrong');
                 uiPanel.classList.add('shake');
                 uiLed.classList.add('on-red');
                 streak = 0;
-                updateStats();
-                
-                const allBtns = document.querySelectorAll('.chord-btn');
-                allBtns.forEach(b => {
+                document.querySelectorAll('.chord-btn').forEach(b => {
                     if(b.textContent === currentCorrectAnswer) b.classList.add('correct');
                 });
-                setTimeout(nextQuestion, 1200);
             }
+
+            updateStats();
+            showRecap();
+
+            // MODIFICA: PAUSA PORTATA A 3.5 SECONDI
+            setTimeout(nextQuestion, 3500); 
+        }
+
+        function showRecap() {
+            let html = '';
+            currentFullProgression.forEach((chord, index) => {
+                let cssClass = 'recap-chord';
+                if (index === currentTargetIndex) {
+                    cssClass += ' highlight';
+                }
+                
+                html += `<span class="${cssClass}">${chord}</span>`;
+                
+                if (index < currentFullProgression.length - 1) {
+                    html += ` <span class="arrow">➝</span> `;
+                }
+            });
+            uiRecapSeq.innerHTML = html;
+            uiRecapArea.classList.add('visible');
         }
 
         function updateStats() {
