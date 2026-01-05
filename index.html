@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Harmony Trainer Pro v2.1</title>
+    <style>
+        /* --- STILE ESTETICO (Dark Plugin Theme) --- */
+        :root {
+            --bg-color: #121212;
+            --panel-color: #1e1e1e;
+            --accent-cyan: #22d3ee;
+            --accent-gold: #fbbf24;
+            --text-main: #ffffff;
+            --text-dim: #6b7280;
+            --btn-bg: #2d2d2d;
+            --btn-border: #404040;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* HEADER & SCORE */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+        }
+        .stat-value { color: white; font-weight: bold; }
+        .stat-streak { color: var(--accent-gold); font-weight: bold; }
+
+        /* MODE SWITCHER */
+        .mode-switcher {
+            display: flex;
+            background: #000;
+            border-radius: 8px;
+            padding: 4px;
+            border: 1px solid var(--btn-border);
+            margin-bottom: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 8px 0;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background-color: var(--btn-bg);
+            color: var(--accent-cyan);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* MAIN DISPLAY LCD */
+        .device-panel {
+            background: radial-gradient(circle at top left, #2a2a2a, #1a1a1a);
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+        }
+
+        .led {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #333;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+        .led.on-green { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+        .led.on-red { background-color: var(--error); box-shadow: 0 0 8px var(--error); }
+
+        .screen-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #555;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .key-display {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--accent-cyan);
+            margin-bottom: 12px;
+            text-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
+            line-height: 1;
+        }
+
+        .divider { height: 1px; background: #333; width: 80%; margin: 10px auto; }
+
+        .degree-display {
+            font-size: 50px;
+            font-weight: bold;
+            color: var(--accent-gold);
+            margin: 5px 0;
+            text-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
+            line-height: 1;
+        }
+
+        /* GRID BOTTONI */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .chord-btn {
+            background-color: var(--btn-bg);
+            border: 1px solid var(--btn-border);
+            border-bottom: 4px solid var(--btn-border);
+            border-radius: 8px;
+            padding: 15px;
+            color: #eee;
+            font-size: 16px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, border 0.1s;
+        }
+
+        .chord-btn:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+
+        .chord-btn.correct { background-color: var(--success); border-color: #166534; color: white; }
+        .chord-btn.wrong { background-color: var(--error); border-color: #991b1b; color: white; }
+
+        .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translateX(-2px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="header">
+            <div>HARMONY UNIT <span style="color:#444">v2.1</span></div>
+            <div>
+                SCORE <span id="scoreVal" class="stat-value">0</span>
+                <span style="color:#444; margin:0 5px">|</span>
+                STREAK <span id="streakVal" class="stat-streak">0</span>
+            </div>
+        </div>
+
+        <div class="mode-switcher">
+            <button class="mode-btn" id="btnMaj" onclick="setMode('maj')">MAJOR</button>
+            <button class="mode-btn" id="btnMin" onclick="setMode('min')">MINOR</button>
+            <button class="mode-btn active" id="btnMix" onclick="setMode('mix')">MIXED</button>
+        </div>
+
+        <div id="devicePanel" class="device-panel">
+            <div id="statusLed" class="led"></div>
+            <span class="screen-label">Current Key</span>
+            <div id="keyDisplay" class="key-display">C Minor</div>
+            <div class="divider"></div>
+            <span class="screen-label">Identify Degree</span>
+            <div id="degreeDisplay" class="degree-display">V</div>
+        </div>
+
+        <div id="optionsGrid" class="btn-grid">
+            </div>
+    </div>
+
+    <script>
+        // --- DATABASE MUSICALE (II-V-I) ---
+        // Nota: Il 'I' grado esiste nel DB per usarlo come distrattore o per riferimento,
+        // ma non verrà chiesto come domanda.
+        const musicData = {
+            "C":  { maj: ["Dm7", "G7", "Cmaj7"], min: ["Dm7b5", "G7b9", "CmMaj7"] },
+            "F":  { maj: ["Gm7", "C7", "Fmaj7"], min: ["Gm7b5", "C7b9", "FmMaj7"] },
+            "Bb": { maj: ["Cm7", "F7", "Bbmaj7"], min: ["Cm7b5", "F7b9", "BbmMaj7"] },
+            "Eb": { maj: ["Fm7", "Bb7", "Ebmaj7"], min: ["Fm7b5", "Bb7b9", "EbmMaj7"] },
+            "Ab": { maj: ["Bbm7", "Eb7", "Abmaj7"], min: ["Bbm7b5", "Eb7b9", "AbmMaj7"] },
+            "Db": { maj: ["Ebm7", "Ab7", "Dbmaj7"], min: ["Ebm7b5", "Ab7b9", "DbmMaj7"] },
+            "Gb": { maj: ["Abm7", "Db7", "Gbmaj7"], min: ["Abm7b5", "Db7b9", "GbmMaj7"] },
+            "B":  { maj: ["C#m7", "F#7", "Bmaj7"],  min: ["C#m7b5", "F#7b9", "BmMaj7"] },
+            "E":  { maj: ["F#m7", "B7", "Emaj7"],   min: ["F#m7b5", "B7b9", "EmMaj7"] },
+            "A":  { maj: ["Bm7", "E7", "Amaj7"],    min: ["Bm7b5", "E7b9", "AmMaj7"] },
+            "D":  { maj: ["Em7", "A7", "Dmaj7"],    min: ["Em7b5", "A7b9", "DmMaj7"] },
+            "G":  { maj: ["Am7", "D7", "Gmaj7"],    min: ["Am7b5", "D7b9", "GmMaj7"] }
+        };
+
+        const keys = Object.keys(musicData);
+        // Mappatura solo per II e V. Il I non viene chiesto.
+        const degreesMap = ["II", "V"]; 
+        
+        // Pool globale (contiene anche i I gradi come possibili risposte sbagliate)
+        const allChordsPool = [];
+        keys.forEach(k => {
+            allChordsPool.push(...musicData[k].maj);
+            allChordsPool.push(...musicData[k].min);
+        });
+
+        // --- STATO ---
+        let score = 0;
+        let streak = 0;
+        let currentModeSetting = 'mix'; 
+        let currentCorrectAnswer = "";
+        let isInputLocked = false;
+
+        // --- DOM ---
+        const uiScore = document.getElementById('scoreVal');
+        const uiStreak = document.getElementById('streakVal');
+        const uiKey = document.getElementById('keyDisplay');
+        const uiDegree = document.getElementById('degreeDisplay');
+        const uiGrid = document.getElementById('optionsGrid');
+        const uiPanel = document.getElementById('devicePanel');
+        const uiLed = document.getElementById('statusLed');
+        
+        const btnMaj = document.getElementById('btnMaj');
+        const btnMin = document.getElementById('btnMin');
+        const btnMix = document.getElementById('btnMix');
+
+        function setMode(mode) {
+            currentModeSetting = mode;
+            btnMaj.classList.remove('active');
+            btnMin.classList.remove('active');
+            btnMix.classList.remove('active');
+            
+            if(mode === 'maj') btnMaj.classList.add('active');
+            if(mode === 'min') btnMin.classList.add('active');
+            if(mode === 'mix') btnMix.classList.add('active');
+
+            streak = 0;
+            score = 0;
+            updateStats();
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            isInputLocked = false;
+            uiPanel.classList.remove('shake');
+            uiLed.className = 'led';
+
+            // 1. Determina Modo
+            let roundMode = 'maj';
+            if (currentModeSetting === 'maj') roundMode = 'maj';
+            else if (currentModeSetting === 'min') roundMode = 'min';
+            else roundMode = Math.random() > 0.5 ? 'maj' : 'min';
+
+            // 2. Tonalità e Grado
+            const rKey = keys[Math.floor(Math.random() * keys.length)];
+            
+            // MODIFICA CRUCIALE: Sceglie solo 0 (II) o 1 (V).
+            // Moltiplicando * 2 otteniamo solo indici 0 o 1.
+            const rDegreeIdx = Math.floor(Math.random() * 2); 
+            
+            // 3. Risposta Corretta
+            const targetChords = musicData[rKey][roundMode];
+            currentCorrectAnswer = targetChords[rDegreeIdx];
+            
+            // 4. Update UI
+            const modeLabel = roundMode === 'maj' ? "MAJOR" : "MINOR";
+            const modeColor = roundMode === 'maj' ? '#22d3ee' : '#f472b6'; 
+            
+            uiKey.innerHTML = `${rKey} <span style="font-size:0.5em; color:${modeColor}; display:block; margin-top:5px">${modeLabel}</span>`;
+            
+            // Mostra II o V
+            uiDegree.textContent = degreesMap[rDegreeIdx];
+
+            // 5. Opzioni (1 giusta + 3 sbagliate)
+            let options = [currentCorrectAnswer];
+            while(options.length < 4) {
+                const randomChord = allChordsPool[Math.floor(Math.random() * allChordsPool.length)];
+                if(!options.includes(randomChord)) {
+                    options.push(randomChord);
+                }
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            // 6. Genera Bottoni
+            uiGrid.innerHTML = '';
+            options.forEach(chord => {
+                const btn = document.createElement('button');
+                btn.className = 'chord-btn';
+                btn.textContent = chord;
+                btn.ontouchstart = (e) => { e.preventDefault(); handleAnswer(btn, chord); };
+                btn.onclick = () => handleAnswer(btn, chord);
+                uiGrid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(btn, selectedChord) {
+            if(isInputLocked) return;
+            isInputLocked = true;
+
+            if(selectedChord === currentCorrectAnswer) {
+                btn.classList.add('correct');
+                uiLed.classList.add('on-green');
+                score += 10;
+                streak++;
+                updateStats();
+                setTimeout(nextQuestion, 500); 
+            } else {
+                btn.classList.add('wrong');
+                uiPanel.classList.add('shake');
+                uiLed.classList.add('on-red');
+                streak = 0;
+                updateStats();
+                
+                const allBtns = document.querySelectorAll('.chord-btn');
+                allBtns.forEach(b => {
+                    if(b.textContent === currentCorrectAnswer) b.classList.add('correct');
+                });
+                setTimeout(nextQuestion, 1200);
+            }
+        }
+
+        function updateStats() {
+            uiScore.textContent = score;
+            uiStreak.textContent = streak;
+        }
+
+        nextQuestion();
+
+    </script>
+</body>
+</html>
