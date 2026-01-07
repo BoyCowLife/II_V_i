@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Harmony Trainer v3.1</title>
+    <title>Harmony Trainer v4.1 (Default Major)</title>
     <style>
         /* --- STILE ESTETICO (Dark Plugin Theme) --- */
         :root {
@@ -40,6 +40,8 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            height: 100vh;
+            justify-content: center;
         }
 
         /* HEADER & SCORE */
@@ -53,7 +55,7 @@
             margin-bottom: 5px;
         }
         .stat-value { color: white; font-weight: bold; }
-        .stat-streak { color: var(--accent-gold); font-weight: bold; }
+        .stat-progress { color: var(--accent-cyan); font-weight: bold; }
 
         /* MODE SWITCHER */
         .mode-switcher {
@@ -62,7 +64,7 @@
             border-radius: 8px;
             padding: 4px;
             border: 1px solid var(--btn-border);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .mode-btn {
@@ -94,7 +96,7 @@
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
             text-align: center;
             position: relative;
-            min-height: 240px; /* Aumentato un po' per il testo grande */
+            min-height: 140px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -125,7 +127,7 @@
         }
 
         .key-display {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: var(--accent-cyan);
             margin-bottom: 5px;
@@ -133,68 +135,19 @@
             line-height: 1;
         }
 
-        .divider { height: 1px; background: #333; width: 80%; margin: 8px auto; }
-
-        .degree-display {
-            font-size: 42px;
-            font-weight: bold;
-            color: var(--accent-gold);
-            margin: 5px 0;
-            text-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
-            line-height: 1;
+        .sub-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
         }
 
-        /* RECAP SECTION (MODIFICATO PER VISIBILITÀ) */
-        .recap-container {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #444;
-            width: 100%;
-            opacity: 0;
-            transition: opacity 0.3s ease-in;
-        }
-        .recap-container.visible { opacity: 1; }
-        
-        .recap-title {
-            font-size: 10px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
-        }
-        
-        .recap-sequence {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap; /* Per schermi molto piccoli */
-        }
-
-        /* STILE ACCORDI RECAP */
-        .recap-chord {
-            font-size: 20px; /* Molto più grande */
-            font-weight: bold;
-            color: #777;
-        }
-
-        .recap-chord.highlight {
-            color: var(--accent-gold);
-            font-size: 24px; /* Ancora più grande per quello attivo */
-            text-shadow: 0 0 5px rgba(251,191,36,0.3);
-            border-bottom: 2px solid var(--accent-gold);
-        }
-
-        .arrow {
-            font-size: 14px;
-            color: #444;
-        }
-
-        /* GRID BOTTONI */
+        /* GRID BOTTONI (VERTICALE) */
         .btn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-grow: 1;
+            max-height: 400px;
         }
 
         .chord-btn {
@@ -204,11 +157,22 @@
             border-radius: 8px;
             padding: 15px;
             color: #eee;
-            font-size: 16px;
+            font-size: 15px;
             font-family: inherit;
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.1s, border 0.1s;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .chord-btn span.arrow {
+            color: #555;
+            margin: 0 5px;
+            font-size: 12px;
         }
 
         .chord-btn:active {
@@ -218,6 +182,37 @@
 
         .chord-btn.correct { background-color: var(--success); border-color: #166534; color: white; }
         .chord-btn.wrong { background-color: var(--error); border-color: #991b1b; color: white; }
+
+        /* RESULTS SCREEN */
+        .results-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(18, 18, 18, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            display: none;
+        }
+        .results-overlay.visible { display: flex; }
+
+        .result-score { font-size: 60px; color: var(--accent-gold); font-weight: bold; margin-bottom: 10px; }
+        .result-text { color: #888; margin-bottom: 30px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .restart-btn {
+            background: var(--accent-cyan);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+        }
 
         .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake {
@@ -231,37 +226,34 @@
 <body>
 
     <div id="app">
+        <div id="resultsScreen" class="results-overlay">
+            <div class="result-text">Session Complete</div>
+            <div id="finalScore" class="result-score">0</div>
+            <div class="result-text" style="font-size: 10px; margin-top:-20px; margin-bottom: 40px">POINTS</div>
+            <button class="restart-btn" onclick="restartGame()">New Round</button>
+        </div>
+
         <div class="header">
-            <div>HARMONY UNIT <span style="color:#444">v3.1</span></div>
+            <div>HARMONY UNIT <span style="color:#444">v4.1</span></div>
             <div>
                 SCORE <span id="scoreVal" class="stat-value">0</span>
                 <span style="color:#444; margin:0 5px">|</span>
-                STREAK <span id="streakVal" class="stat-streak">0</span>
+                QUIZ <span id="progressVal" class="stat-progress">1/30</span>
             </div>
         </div>
 
         <div class="mode-switcher">
-            <button class="mode-btn" id="btnMaj" onclick="setMode('maj')">MAJOR</button>
+            <button class="mode-btn active" id="btnMaj" onclick="setMode('maj')">MAJOR</button>
             <button class="mode-btn" id="btnMin" onclick="setMode('min')">MINOR</button>
-            <button class="mode-btn active" id="btnMix" onclick="setMode('mix')">MIXED</button>
+            <button class="mode-btn" id="btnMix" onclick="setMode('mix')">MIXED</button>
         </div>
 
         <div id="devicePanel" class="device-panel">
             <div id="statusLed" class="led"></div>
             
-            <div id="questionArea">
-                <span class="screen-label">Current Key</span>
-                <div id="keyDisplay" class="key-display">C Minor</div>
-                <div class="divider"></div>
-                <span class="screen-label">Identify Degree</span>
-                <div id="degreeDisplay" class="degree-display">V</div>
-            </div>
-
-            <div id="recapArea" class="recap-container">
-                <div class="recap-title">PROGRESSION RECAP</div>
-                <div id="recapSequence" class="recap-sequence">
-                    </div>
-            </div>
+            <span class="screen-label">Select II - V - I for</span>
+            <div id="keyDisplay" class="key-display">C Minor</div>
+            <div id="subLabel" class="sub-label">Find the full progression</div>
         </div>
 
         <div id="optionsGrid" class="btn-grid">
@@ -269,7 +261,7 @@
     </div>
 
     <script>
-        // --- DATABASE MUSICALE (II-V-I) ---
+        // --- DATABASE MUSICALE ---
         const musicData = {
             "C":  { maj: ["Dm7", "G7", "Cmaj7"], min: ["Dm7b5", "G7b9", "CmMaj7"] },
             "F":  { maj: ["Gm7", "C7", "Fmaj7"], min: ["Gm7b5", "C7b9", "FmMaj7"] },
@@ -286,34 +278,27 @@
         };
 
         const keys = Object.keys(musicData);
-        const degreesMap = ["II", "V"]; 
-        
-        const allChordsPool = [];
-        keys.forEach(k => {
-            allChordsPool.push(...musicData[k].maj);
-            allChordsPool.push(...musicData[k].min);
-        });
+        const TOTAL_QUESTIONS = 30;
 
         // --- STATO ---
         let score = 0;
-        let streak = 0;
-        let currentModeSetting = 'mix'; 
-        let currentCorrectAnswer = "";
+        let questionCount = 1;
+        // AGGIORNATO: Default su 'maj'
+        let currentModeSetting = 'maj'; 
+        let currentCorrectProgression = null;
         let isInputLocked = false;
-        
-        let currentFullProgression = []; 
-        let currentTargetIndex = 0;
 
         // --- DOM ---
         const uiScore = document.getElementById('scoreVal');
-        const uiStreak = document.getElementById('streakVal');
+        const uiProgress = document.getElementById('progressVal');
         const uiKey = document.getElementById('keyDisplay');
-        const uiDegree = document.getElementById('degreeDisplay');
+        const uiSub = document.getElementById('subLabel');
         const uiGrid = document.getElementById('optionsGrid');
         const uiPanel = document.getElementById('devicePanel');
         const uiLed = document.getElementById('statusLed');
-        const uiRecapArea = document.getElementById('recapArea');
-        const uiRecapSeq = document.getElementById('recapSequence');
+        const uiResults = document.getElementById('resultsScreen');
+        const uiFinalScore = document.getElementById('finalScore');
+        
         const btnMaj = document.getElementById('btnMaj');
         const btnMin = document.getElementById('btnMin');
         const btnMix = document.getElementById('btnMix');
@@ -323,112 +308,135 @@
             btnMaj.classList.remove('active');
             btnMin.classList.remove('active');
             btnMix.classList.remove('active');
+            
             if(mode === 'maj') btnMaj.classList.add('active');
             if(mode === 'min') btnMin.classList.add('active');
             if(mode === 'mix') btnMix.classList.add('active');
-            streak = 0;
+
+            restartGame();
+        }
+
+        function restartGame() {
             score = 0;
+            questionCount = 1;
+            uiResults.classList.remove('visible');
             updateStats();
             nextQuestion();
         }
 
+        function formatProgression(chordArray) {
+            return chordArray.join(' <span class="arrow">➝</span> ');
+        }
+        
+        function getRawString(chordArray) {
+            return chordArray.join(' - ');
+        }
+
         function nextQuestion() {
+            if (questionCount > TOTAL_QUESTIONS) {
+                endGame();
+                return;
+            }
+
             isInputLocked = false;
             uiPanel.classList.remove('shake');
             uiLed.className = 'led';
-            uiRecapArea.classList.remove('visible');
 
+            // 1. Determina Modo
             let roundMode = 'maj';
             if (currentModeSetting === 'maj') roundMode = 'maj';
             else if (currentModeSetting === 'min') roundMode = 'min';
             else roundMode = Math.random() > 0.5 ? 'maj' : 'min';
 
+            // 2. Tonalità CORRETTA
             const rKey = keys[Math.floor(Math.random() * keys.length)];
-            const rDegreeIdx = Math.floor(Math.random() * 2); 
-            
-            const targetChords = musicData[rKey][roundMode];
-            currentFullProgression = targetChords; 
-            currentTargetIndex = rDegreeIdx;       
-            currentCorrectAnswer = targetChords[rDegreeIdx];
-            
+            const correctArr = musicData[rKey][roundMode];
+            const correctString = getRawString(correctArr);
+            currentCorrectProgression = correctString;
+
+            // 3. Update UI
             const modeLabel = roundMode === 'maj' ? "MAJOR" : "MINOR";
             const modeColor = roundMode === 'maj' ? '#22d3ee' : '#f472b6'; 
             
             uiKey.innerHTML = `${rKey} <span style="font-size:0.5em; color:${modeColor}; display:block; margin-top:5px">${modeLabel}</span>`;
-            uiDegree.textContent = degreesMap[rDegreeIdx];
+            uiSub.textContent = "Identify the full II - V - I";
 
-            let options = [currentCorrectAnswer];
+            // 4. Genera Opzioni
+            let options = [{ raw: correctString, html: formatProgression(correctArr) }];
+            
             while(options.length < 4) {
-                const randomChord = allChordsPool[Math.floor(Math.random() * allChordsPool.length)];
-                if(!options.includes(randomChord)) {
-                    options.push(randomChord);
+                const randK = keys[Math.floor(Math.random() * keys.length)];
+                const randM = Math.random() > 0.5 ? 'maj' : 'min';
+                const wrongArr = musicData[randK][randM];
+                const wrongString = getRawString(wrongArr);
+
+                const alreadyExists = options.some(o => o.raw === wrongString);
+                if (!alreadyExists && wrongString !== correctString) {
+                    options.push({ raw: wrongString, html: formatProgression(wrongArr) });
                 }
             }
             options.sort(() => Math.random() - 0.5);
 
+            // 5. Render Bottoni
             uiGrid.innerHTML = '';
-            options.forEach(chord => {
+            options.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'chord-btn';
-                btn.textContent = chord;
-                btn.ontouchstart = (e) => { e.preventDefault(); handleAnswer(btn, chord); };
-                btn.onclick = () => handleAnswer(btn, chord);
+                btn.innerHTML = opt.html;
+                btn.dataset.raw = opt.raw; 
+                
+                const action = () => handleAnswer(btn, opt.raw);
+                btn.ontouchstart = (e) => { e.preventDefault(); action(); };
+                btn.onclick = action;
+                
                 uiGrid.appendChild(btn);
             });
         }
 
-        function handleAnswer(btn, selectedChord) {
+        function handleAnswer(btn, selectedRaw) {
             if(isInputLocked) return;
             isInputLocked = true;
 
-            const isCorrect = (selectedChord === currentCorrectAnswer);
+            const isCorrect = (selectedRaw === currentCorrectProgression);
 
             if(isCorrect) {
                 btn.classList.add('correct');
                 uiLed.classList.add('on-green');
                 score += 10;
-                streak++;
             } else {
                 btn.classList.add('wrong');
                 uiPanel.classList.add('shake');
                 uiLed.classList.add('on-red');
-                streak = 0;
-                document.querySelectorAll('.chord-btn').forEach(b => {
-                    if(b.textContent === currentCorrectAnswer) b.classList.add('correct');
-                });
+            }
+            
+            // Rivela sempre il verde
+            const allBtns = uiGrid.children;
+            for (let b of allBtns) {
+                if (b.dataset.raw === currentCorrectProgression) {
+                    b.classList.add('correct');
+                }
             }
 
-            updateStats();
-            showRecap();
-
-            // MODIFICA: PAUSA PORTATA A 3.5 SECONDI
-            setTimeout(nextQuestion, 3500); 
-        }
-
-        function showRecap() {
-            let html = '';
-            currentFullProgression.forEach((chord, index) => {
-                let cssClass = 'recap-chord';
-                if (index === currentTargetIndex) {
-                    cssClass += ' highlight';
-                }
-                
-                html += `<span class="${cssClass}">${chord}</span>`;
-                
-                if (index < currentFullProgression.length - 1) {
-                    html += ` <span class="arrow">➝</span> `;
-                }
-            });
-            uiRecapSeq.innerHTML = html;
-            uiRecapArea.classList.add('visible');
+            setTimeout(() => {
+                questionCount++;
+                updateStats();
+                nextQuestion();
+            }, 1500); 
         }
 
         function updateStats() {
             uiScore.textContent = score;
-            uiStreak.textContent = streak;
+            let qShow = questionCount > TOTAL_QUESTIONS ? TOTAL_QUESTIONS : questionCount;
+            uiProgress.textContent = `${qShow}/${TOTAL_QUESTIONS}`;
         }
 
-        nextQuestion();
+        function endGame() {
+            uiFinalScore.textContent = score;
+            uiResults.classList.add('visible');
+        }
+
+        // START
+        restartGame();
 
     </script>
 </body>
