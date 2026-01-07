@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Harmony Trainer v4.1 (Default Major)</title>
+    <title>Harmony Trainer v5.0 (V Degree Option)</title>
     <style>
         /* --- STILE ESTETICO (Dark Plugin Theme) --- */
         :root {
@@ -39,7 +39,7 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px; /* Reduced gap slightly */
             height: 100vh;
             justify-content: center;
         }
@@ -57,33 +57,47 @@
         .stat-value { color: white; font-weight: bold; }
         .stat-progress { color: var(--accent-cyan); font-weight: bold; }
 
-        /* MODE SWITCHER */
-        .mode-switcher {
+        /* SWITCHERS CONTAINER */
+        .controls-area {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        /* GENERIC SWITCHER STYLE */
+        .switcher {
             display: flex;
             background: #000;
             border-radius: 8px;
             padding: 4px;
             border: 1px solid var(--btn-border);
-            margin-bottom: 5px;
         }
 
-        .mode-btn {
+        .switcher-btn {
             flex: 1;
             background: transparent;
             border: none;
             color: var(--text-dim);
             padding: 8px 0;
             font-family: inherit;
-            font-size: 12px;
+            font-size: 11px; /* Slightly smaller to fit */
             font-weight: bold;
             cursor: pointer;
             border-radius: 6px;
             transition: all 0.2s;
         }
 
-        .mode-btn.active {
+        .switcher-btn.active {
             background-color: var(--btn-bg);
             color: var(--accent-cyan);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        /* Specific color for V-Degree active state */
+        .switcher-btn.active-gold {
+            background-color: var(--btn-bg);
+            color: var(--accent-gold);
             box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
@@ -96,7 +110,7 @@
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
             text-align: center;
             position: relative;
-            min-height: 140px;
+            min-height: 130px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -141,13 +155,20 @@
             margin-top: 5px;
         }
 
-        /* GRID BOTTONI (VERTICALE) */
+        /* GRID BOTTONI */
         .btn-grid {
             display: flex;
             flex-direction: column;
             gap: 10px;
             flex-grow: 1;
             max-height: 400px;
+        }
+
+        /* Griglia 2x2 per V Degree (perché gli accordi sono corti) */
+        .btn-grid.grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
         .chord-btn {
@@ -182,6 +203,12 @@
 
         .chord-btn.correct { background-color: var(--success); border-color: #166534; color: white; }
         .chord-btn.wrong { background-color: var(--error); border-color: #991b1b; color: white; }
+        
+        /* Stile diverso per V Degree buttons (più grandi) */
+        .btn-grid.grid-2x2 .chord-btn {
+            font-size: 20px;
+            color: var(--accent-gold);
+        }
 
         /* RESULTS SCREEN */
         .results-overlay {
@@ -234,7 +261,7 @@
         </div>
 
         <div class="header">
-            <div>HARMONY UNIT <span style="color:#444">v4.1</span></div>
+            <div>HARMONY UNIT <span style="color:#444">v5.0</span></div>
             <div>
                 SCORE <span id="scoreVal" class="stat-value">0</span>
                 <span style="color:#444; margin:0 5px">|</span>
@@ -242,18 +269,25 @@
             </div>
         </div>
 
-        <div class="mode-switcher">
-            <button class="mode-btn active" id="btnMaj" onclick="setMode('maj')">MAJOR</button>
-            <button class="mode-btn" id="btnMin" onclick="setMode('min')">MINOR</button>
-            <button class="mode-btn" id="btnMix" onclick="setMode('mix')">MIXED</button>
+        <div class="controls-area">
+            <div class="switcher">
+                <button class="switcher-btn active" id="btnMaj" onclick="setMode('maj')">MAJOR</button>
+                <button class="switcher-btn" id="btnMin" onclick="setMode('min')">MINOR</button>
+                <button class="switcher-btn" id="btnMix" onclick="setMode('mix')">MIXED</button>
+            </div>
+            
+            <div class="switcher">
+                <button class="switcher-btn active" id="btnTypeFull" onclick="setType('full')">II-V-I SEQ</button>
+                <button class="switcher-btn" id="btnTypeV" onclick="setType('v_only')">V DEGREE</button>
+            </div>
         </div>
 
         <div id="devicePanel" class="device-panel">
             <div id="statusLed" class="led"></div>
             
-            <span class="screen-label">Select II - V - I for</span>
+            <span class="screen-label" id="topLabel">Select Progression for</span>
             <div id="keyDisplay" class="key-display">C Minor</div>
-            <div id="subLabel" class="sub-label">Find the full progression</div>
+            <div id="subLabel" class="sub-label">Find the full sequence</div>
         </div>
 
         <div id="optionsGrid" class="btn-grid">
@@ -261,7 +295,7 @@
     </div>
 
     <script>
-        // --- DATABASE MUSICALE ---
+        // --- DATABASE ---
         const musicData = {
             "C":  { maj: ["Dm7", "G7", "Cmaj7"], min: ["Dm7b5", "G7b9", "CmMaj7"] },
             "F":  { maj: ["Gm7", "C7", "Fmaj7"], min: ["Gm7b5", "C7b9", "FmMaj7"] },
@@ -283,15 +317,16 @@
         // --- STATO ---
         let score = 0;
         let questionCount = 1;
-        // AGGIORNATO: Default su 'maj'
-        let currentModeSetting = 'maj'; 
-        let currentCorrectProgression = null;
+        let currentMode = 'maj';  // 'maj', 'min', 'mix'
+        let currentType = 'full'; // 'full', 'v_only'
+        let currentCorrectAnswer = null;
         let isInputLocked = false;
 
         // --- DOM ---
         const uiScore = document.getElementById('scoreVal');
         const uiProgress = document.getElementById('progressVal');
         const uiKey = document.getElementById('keyDisplay');
+        const uiTopLabel = document.getElementById('topLabel');
         const uiSub = document.getElementById('subLabel');
         const uiGrid = document.getElementById('optionsGrid');
         const uiPanel = document.getElementById('devicePanel');
@@ -299,12 +334,16 @@
         const uiResults = document.getElementById('resultsScreen');
         const uiFinalScore = document.getElementById('finalScore');
         
+        // Mode Buttons
         const btnMaj = document.getElementById('btnMaj');
         const btnMin = document.getElementById('btnMin');
         const btnMix = document.getElementById('btnMix');
+        // Type Buttons
+        const btnTypeFull = document.getElementById('btnTypeFull');
+        const btnTypeV = document.getElementById('btnTypeV');
 
         function setMode(mode) {
-            currentModeSetting = mode;
+            currentMode = mode;
             btnMaj.classList.remove('active');
             btnMin.classList.remove('active');
             btnMix.classList.remove('active');
@@ -312,6 +351,17 @@
             if(mode === 'maj') btnMaj.classList.add('active');
             if(mode === 'min') btnMin.classList.add('active');
             if(mode === 'mix') btnMix.classList.add('active');
+
+            restartGame();
+        }
+
+        function setType(type) {
+            currentType = type;
+            btnTypeFull.classList.remove('active');
+            btnTypeV.classList.remove('active-gold'); // Rimuovi colore speciale
+            
+            if(type === 'full') btnTypeFull.classList.add('active');
+            if(type === 'v_only') btnTypeV.classList.add('active-gold'); // Colore oro per V degree
 
             restartGame();
         }
@@ -327,10 +377,6 @@
         function formatProgression(chordArray) {
             return chordArray.join(' <span class="arrow">➝</span> ');
         }
-        
-        function getRawString(chordArray) {
-            return chordArray.join(' - ');
-        }
 
         function nextQuestion() {
             if (questionCount > TOTAL_QUESTIONS) {
@@ -342,42 +388,79 @@
             uiPanel.classList.remove('shake');
             uiLed.className = 'led';
 
-            // 1. Determina Modo
+            // 1. Logica Scala (Major/Minor/Mix)
             let roundMode = 'maj';
-            if (currentModeSetting === 'maj') roundMode = 'maj';
-            else if (currentModeSetting === 'min') roundMode = 'min';
+            if (currentMode === 'maj') roundMode = 'maj';
+            else if (currentMode === 'min') roundMode = 'min';
             else roundMode = Math.random() > 0.5 ? 'maj' : 'min';
 
             // 2. Tonalità CORRETTA
             const rKey = keys[Math.floor(Math.random() * keys.length)];
-            const correctArr = musicData[rKey][roundMode];
-            const correctString = getRawString(correctArr);
-            currentCorrectProgression = correctString;
-
-            // 3. Update UI
+            const correctArr = musicData[rKey][roundMode]; // Es: ["Dm7", "G7", "Cmaj7"]
+            
             const modeLabel = roundMode === 'maj' ? "MAJOR" : "MINOR";
-            const modeColor = roundMode === 'maj' ? '#22d3ee' : '#f472b6'; 
+            const modeColor = roundMode === 'maj' ? '#22d3ee' : '#f472b6';
             
+            // Aggiorna Display
             uiKey.innerHTML = `${rKey} <span style="font-size:0.5em; color:${modeColor}; display:block; margin-top:5px">${modeLabel}</span>`;
-            uiSub.textContent = "Identify the full II - V - I";
 
-            // 4. Genera Opzioni
-            let options = [{ raw: correctString, html: formatProgression(correctArr) }];
+            // 3. Generazione Opzioni in base al TIPO DI QUIZ
+            let options = [];
             
-            while(options.length < 4) {
-                const randK = keys[Math.floor(Math.random() * keys.length)];
-                const randM = Math.random() > 0.5 ? 'maj' : 'min';
-                const wrongArr = musicData[randK][randM];
-                const wrongString = getRawString(wrongArr);
+            if (currentType === 'full') {
+                // --- LOGICA SEQUENZA COMPLETA ---
+                uiGrid.className = 'btn-grid'; // Lista verticale
+                uiTopLabel.textContent = "Select Full Progression";
+                uiSub.textContent = "Identify the II - V - I";
 
-                const alreadyExists = options.some(o => o.raw === wrongString);
-                if (!alreadyExists && wrongString !== correctString) {
-                    options.push({ raw: wrongString, html: formatProgression(wrongArr) });
+                // Target
+                const correctString = correctArr.join(' - '); // Raw ID
+                currentCorrectAnswer = correctString;
+                options.push({ raw: correctString, html: formatProgression(correctArr) });
+
+                // Distrattori (Sequenze complete di altre chiavi)
+                while(options.length < 4) {
+                    const randK = keys[Math.floor(Math.random() * keys.length)];
+                    const randM = Math.random() > 0.5 ? 'maj' : 'min';
+                    const wrongArr = musicData[randK][randM];
+                    const wrongString = wrongArr.join(' - ');
+                    
+                    const exists = options.some(o => o.raw === wrongString);
+                    if (!exists && wrongString !== correctString) {
+                        options.push({ raw: wrongString, html: formatProgression(wrongArr) });
+                    }
+                }
+
+            } else {
+                // --- LOGICA SOLO V GRADO ---
+                uiGrid.className = 'btn-grid grid-2x2'; // Griglia quadrata
+                uiTopLabel.textContent = "Identify the V Degree";
+                uiSub.textContent = "Which is the Dominant Chord?";
+
+                // Target (L'accordo centrale, indice 1)
+                const targetChord = correctArr[1];
+                currentCorrectAnswer = targetChord;
+                options.push({ raw: targetChord, html: targetChord });
+
+                // Distrattori (V gradi di ALTRE tonalità, per confondere le idee)
+                while(options.length < 4) {
+                    const randK = keys[Math.floor(Math.random() * keys.length)];
+                    // Cerchiamo di mantenere lo stesso modo per rendere difficile il quiz
+                    // Se cerco G7 (Maj), mostrami C7, F7, etc.
+                    // Se cerco G7b9 (Min), mostrami C7b9, F7b9 etc.
+                    const wrongArr = musicData[randK][roundMode]; 
+                    const wrongChord = wrongArr[1]; // Prendo il V grado
+
+                    const exists = options.some(o => o.raw === wrongChord);
+                    if (!exists && wrongChord !== targetChord) {
+                        options.push({ raw: wrongChord, html: wrongChord });
+                    }
                 }
             }
+
+            // Mischia e Renderizza
             options.sort(() => Math.random() - 0.5);
 
-            // 5. Render Bottoni
             uiGrid.innerHTML = '';
             options.forEach(opt => {
                 const btn = document.createElement('button');
@@ -397,7 +480,7 @@
             if(isInputLocked) return;
             isInputLocked = true;
 
-            const isCorrect = (selectedRaw === currentCorrectProgression);
+            const isCorrect = (selectedRaw === currentCorrectAnswer);
 
             if(isCorrect) {
                 btn.classList.add('correct');
@@ -409,10 +492,10 @@
                 uiLed.classList.add('on-red');
             }
             
-            // Rivela sempre il verde
+            // Rivela corretta
             const allBtns = uiGrid.children;
             for (let b of allBtns) {
-                if (b.dataset.raw === currentCorrectProgression) {
+                if (b.dataset.raw === currentCorrectAnswer) {
                     b.classList.add('correct');
                 }
             }
