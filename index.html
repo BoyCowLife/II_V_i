@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Harmony Trainer v5.0 (V Degree Option)</title>
+    <title>Harmony Trainer v6.0</title>
     <style>
-        /* --- STILE ESTETICO (Dark Plugin Theme) --- */
         :root {
             --bg-color: #121212;
             --panel-color: #1e1e1e;
             --accent-cyan: #22d3ee;
             --accent-gold: #fbbf24;
+            --accent-purple: #a855f7;
             --text-main: #ffffff;
             --text-dim: #6b7280;
             --btn-bg: #2d2d2d;
@@ -39,16 +39,16 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px; /* Reduced gap slightly */
+            gap: 10px;
             height: 100vh;
             justify-content: center;
         }
 
-        /* HEADER & SCORE */
+        /* HEADER */
         .header {
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text-dim);
@@ -57,20 +57,19 @@
         .stat-value { color: white; font-weight: bold; }
         .stat-progress { color: var(--accent-cyan); font-weight: bold; }
 
-        /* SWITCHERS CONTAINER */
+        /* CONTROLS */
         .controls-area {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             margin-bottom: 5px;
         }
 
-        /* GENERIC SWITCHER STYLE */
         .switcher {
             display: flex;
             background: #000;
             border-radius: 8px;
-            padding: 4px;
+            padding: 3px;
             border: 1px solid var(--btn-border);
         }
 
@@ -81,36 +80,27 @@
             color: var(--text-dim);
             padding: 8px 0;
             font-family: inherit;
-            font-size: 11px; /* Slightly smaller to fit */
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
             border-radius: 6px;
             transition: all 0.2s;
         }
 
-        .switcher-btn.active {
-            background-color: var(--btn-bg);
-            color: var(--accent-cyan);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        
-        /* Specific color for V-Degree active state */
-        .switcher-btn.active-gold {
-            background-color: var(--btn-bg);
-            color: var(--accent-gold);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
+        .switcher-btn.active { background-color: var(--btn-bg); color: var(--accent-cyan); }
+        .switcher-btn.active-gold { background-color: var(--btn-bg); color: var(--accent-gold); }
+        .switcher-btn.active-purple { background-color: var(--btn-bg); color: var(--accent-purple); }
 
-        /* MAIN DISPLAY LCD */
+        /* DISPLAY PANEL */
         .device-panel {
             background: radial-gradient(circle at top left, #2a2a2a, #1a1a1a);
             border: 1px solid #333;
             border-radius: 16px;
-            padding: 20px;
+            padding: 25px 20px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
             text-align: center;
             position: relative;
-            min-height: 130px;
+            min-height: 140px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -125,121 +115,52 @@
             height: 8px;
             border-radius: 50%;
             background-color: #333;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
-        .led.on-green { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
-        .led.on-red { background-color: var(--error); box-shadow: 0 0 8px var(--error); }
+        .led.on-green { background-color: var(--success); box-shadow: 0 0 10px var(--success); }
+        .led.on-red { background-color: var(--error); box-shadow: 0 0 10px var(--error); }
 
-        .screen-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #555;
-            display: block;
-            margin-bottom: 4px;
-        }
+        .screen-label { font-size: 10px; text-transform: uppercase; color: #555; letter-spacing: 1px; margin-bottom: 8px; }
+        .key-display { font-size: 42px; font-weight: bold; line-height: 1; transition: color 0.3s; }
+        .sub-label { font-size: 13px; color: #888; margin-top: 12px; font-style: italic; }
 
-        .key-display {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--accent-cyan);
-            margin-bottom: 5px;
-            text-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
-            line-height: 1;
-        }
-
-        .sub-label {
-            font-size: 12px;
-            color: #888;
-            margin-top: 5px;
-        }
-
-        /* GRID BOTTONI */
-        .btn-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            flex-grow: 1;
-            max-height: 400px;
-        }
-
-        /* Griglia 2x2 per V Degree (perché gli accordi sono corti) */
-        .btn-grid.grid-2x2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
+        /* BUTTONS */
+        .btn-grid { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .btn-grid.grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 15px; }
 
         .chord-btn {
             background-color: var(--btn-bg);
             border: 1px solid var(--btn-border);
             border-bottom: 4px solid var(--btn-border);
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 15px;
             color: #eee;
-            font-size: 15px;
+            font-size: 16px;
             font-family: inherit;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.1s, border 0.1s;
-            text-align: center;
+            transition: transform 0.05s;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100%;
         }
-
-        .chord-btn span.arrow {
-            color: #555;
-            margin: 0 5px;
-            font-size: 12px;
-        }
-
-        .chord-btn:active {
-            transform: translateY(2px);
-            border-bottom-width: 2px;
-        }
-
+        .chord-btn:active { transform: translateY(2px); border-bottom-width: 2px; }
         .chord-btn.correct { background-color: var(--success); border-color: #166534; color: white; }
         .chord-btn.wrong { background-color: var(--error); border-color: #991b1b; color: white; }
         
-        /* Stile diverso per V Degree buttons (più grandi) */
-        .btn-grid.grid-2x2 .chord-btn {
-            font-size: 20px;
-            color: var(--accent-gold);
-        }
+        .grid-2x2 .chord-btn { font-size: 22px; color: var(--accent-gold); }
+        .arrow { color: #555; margin: 0 5px; font-size: 12px; }
 
-        /* RESULTS SCREEN */
+        /* RESULTS */
         .results-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(18, 18, 18, 0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            display: none;
+            background: rgba(18, 18, 18, 0.98);
+            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
         }
         .results-overlay.visible { display: flex; }
-
-        .result-score { font-size: 60px; color: var(--accent-gold); font-weight: bold; margin-bottom: 10px; }
-        .result-text { color: #888; margin-bottom: 30px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
-        
-        .restart-btn {
-            background: var(--accent-cyan);
-            color: #000;
-            border: none;
-            padding: 15px 40px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
-        }
+        .result-score { font-size: 70px; color: var(--accent-gold); font-weight: bold; }
+        .restart-btn { background: var(--accent-cyan); border: none; padding: 18px 45px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 20px; text-transform: uppercase; }
 
         .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake {
@@ -248,25 +169,22 @@
             30%, 50%, 70% { transform: translateX(-4px); }
             40%, 60% { transform: translateX(4px); }
         }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="app">
         <div id="resultsScreen" class="results-overlay">
-            <div class="result-text">Session Complete</div>
+            <div style="color: #666; letter-spacing: 2px;">SESSION COMPLETE</div>
             <div id="finalScore" class="result-score">0</div>
-            <div class="result-text" style="font-size: 10px; margin-top:-20px; margin-bottom: 40px">POINTS</div>
+            <div style="color: #444; margin-top: -10px; margin-bottom: 20px;">POINTS</div>
             <button class="restart-btn" onclick="restartGame()">New Round</button>
         </div>
 
         <div class="header">
-            <div>HARMONY UNIT <span style="color:#444">v5.0</span></div>
-            <div>
-                SCORE <span id="scoreVal" class="stat-value">0</span>
-                <span style="color:#444; margin:0 5px">|</span>
-                QUIZ <span id="progressVal" class="stat-progress">1/30</span>
-            </div>
+            <div>HARMONY UNIT <span style="color:#444">v6.0</span></div>
+            <div>SCORE <span id="scoreVal" class="stat-value">0</span> | QUIZ <span id="progressVal" class="stat-progress">1/30</span></div>
         </div>
 
         <div class="controls-area">
@@ -275,27 +193,27 @@
                 <button class="switcher-btn" id="btnMin" onclick="setMode('min')">MINOR</button>
                 <button class="switcher-btn" id="btnMix" onclick="setMode('mix')">MIXED</button>
             </div>
-            
             <div class="switcher">
                 <button class="switcher-btn active" id="btnTypeFull" onclick="setType('full')">II-V-I SEQ</button>
                 <button class="switcher-btn" id="btnTypeV" onclick="setType('v_only')">V DEGREE</button>
+            </div>
+            <div class="switcher hidden" id="directionSwitcher">
+                <button class="switcher-btn active-purple" id="btnDirNormal" onclick="setDirection('normal')">I ➝ FIND V</button>
+                <button class="switcher-btn" id="btnDirReverse" onclick="setDirection('reverse')">V ➝ FIND I</button>
             </div>
         </div>
 
         <div id="devicePanel" class="device-panel">
             <div id="statusLed" class="led"></div>
-            
-            <span class="screen-label" id="topLabel">Select Progression for</span>
-            <div id="keyDisplay" class="key-display">C Minor</div>
-            <div id="subLabel" class="sub-label">Find the full sequence</div>
+            <span class="screen-label" id="topLabel">Target Key</span>
+            <div id="keyDisplay" class="key-display">C Major</div>
+            <div id="subLabel" class="sub-label">Find the V Degree</div>
         </div>
 
-        <div id="optionsGrid" class="btn-grid">
-            </div>
+        <div id="optionsGrid" class="btn-grid"></div>
     </div>
 
     <script>
-        // --- DATABASE ---
         const musicData = {
             "C":  { maj: ["Dm7", "G7", "Cmaj7"], min: ["Dm7b5", "G7b9", "CmMaj7"] },
             "F":  { maj: ["Gm7", "C7", "Fmaj7"], min: ["Gm7b5", "C7b9", "FmMaj7"] },
@@ -312,215 +230,135 @@
         };
 
         const keys = Object.keys(musicData);
-        const TOTAL_QUESTIONS = 30;
+        let score = 0, questionCount = 1, currentMode = 'maj', currentType = 'full', currentDirection = 'normal', currentCorrectAnswer = null, isInputLocked = false;
 
-        // --- STATO ---
-        let score = 0;
-        let questionCount = 1;
-        let currentMode = 'maj';  // 'maj', 'min', 'mix'
-        let currentType = 'full'; // 'full', 'v_only'
-        let currentCorrectAnswer = null;
-        let isInputLocked = false;
+        const ui = {
+            score: document.getElementById('scoreVal'),
+            progress: document.getElementById('progressVal'),
+            key: document.getElementById('keyDisplay'),
+            top: document.getElementById('topLabel'),
+            sub: document.getElementById('subLabel'),
+            grid: document.getElementById('optionsGrid'),
+            led: document.getElementById('statusLed'),
+            results: document.getElementById('resultsScreen'),
+            dirSwitcher: document.getElementById('directionSwitcher'),
+            panel: document.getElementById('devicePanel')
+        };
 
-        // --- DOM ---
-        const uiScore = document.getElementById('scoreVal');
-        const uiProgress = document.getElementById('progressVal');
-        const uiKey = document.getElementById('keyDisplay');
-        const uiTopLabel = document.getElementById('topLabel');
-        const uiSub = document.getElementById('subLabel');
-        const uiGrid = document.getElementById('optionsGrid');
-        const uiPanel = document.getElementById('devicePanel');
-        const uiLed = document.getElementById('statusLed');
-        const uiResults = document.getElementById('resultsScreen');
-        const uiFinalScore = document.getElementById('finalScore');
-        
-        // Mode Buttons
-        const btnMaj = document.getElementById('btnMaj');
-        const btnMin = document.getElementById('btnMin');
-        const btnMix = document.getElementById('btnMix');
-        // Type Buttons
-        const btnTypeFull = document.getElementById('btnTypeFull');
-        const btnTypeV = document.getElementById('btnTypeV');
-
-        function setMode(mode) {
-            currentMode = mode;
-            btnMaj.classList.remove('active');
-            btnMin.classList.remove('active');
-            btnMix.classList.remove('active');
-            
-            if(mode === 'maj') btnMaj.classList.add('active');
-            if(mode === 'min') btnMin.classList.add('active');
-            if(mode === 'mix') btnMix.classList.add('active');
-
-            restartGame();
+        function setMode(m) { currentMode = m; updateUIButtons(); restartGame(); }
+        function setType(t) { 
+            currentType = t; 
+            ui.dirSwitcher.classList.toggle('hidden', t !== 'v_only');
+            updateUIButtons(); 
+            restartGame(); 
         }
+        function setDirection(d) { currentDirection = d; updateUIButtons(); restartGame(); }
 
-        function setType(type) {
-            currentType = type;
-            btnTypeFull.classList.remove('active');
-            btnTypeV.classList.remove('active-gold'); // Rimuovi colore speciale
+        function updateUIButtons() {
+            // Reset active states
+            document.querySelectorAll('.switcher-btn').forEach(b => b.classList.remove('active', 'active-gold', 'active-purple'));
             
-            if(type === 'full') btnTypeFull.classList.add('active');
-            if(type === 'v_only') btnTypeV.classList.add('active-gold'); // Colore oro per V degree
-
-            restartGame();
+            // Mode
+            document.getElementById('btn' + currentMode.charAt(0).toUpperCase() + currentMode.slice(1)).classList.add('active');
+            // Type
+            if(currentType === 'full') document.getElementById('btnTypeFull').classList.add('active');
+            else document.getElementById('btnTypeV').classList.add('active-gold');
+            // Direction
+            if(currentDirection === 'normal') document.getElementById('btnDirNormal').classList.add('active-purple');
+            else document.getElementById('btnDirReverse').classList.add('active-purple');
         }
 
         function restartGame() {
-            score = 0;
-            questionCount = 1;
-            uiResults.classList.remove('visible');
-            updateStats();
+            score = 0; questionCount = 1;
+            ui.results.classList.remove('visible');
             nextQuestion();
         }
 
-        function formatProgression(chordArray) {
-            return chordArray.join(' <span class="arrow">➝</span> ');
-        }
-
         function nextQuestion() {
-            if (questionCount > TOTAL_QUESTIONS) {
-                endGame();
-                return;
-            }
-
+            if (questionCount > 30) { ui.results.classList.add('visible'); document.getElementById('finalScore').textContent = score; return; }
             isInputLocked = false;
-            uiPanel.classList.remove('shake');
-            uiLed.className = 'led';
+            ui.led.className = 'led';
+            ui.panel.classList.remove('shake');
 
-            // 1. Logica Scala (Major/Minor/Mix)
-            let roundMode = 'maj';
-            if (currentMode === 'maj') roundMode = 'maj';
-            else if (currentMode === 'min') roundMode = 'min';
-            else roundMode = Math.random() > 0.5 ? 'maj' : 'min';
-
-            // 2. Tonalità CORRETTA
-            const rKey = keys[Math.floor(Math.random() * keys.length)];
-            const correctArr = musicData[rKey][roundMode]; // Es: ["Dm7", "G7", "Cmaj7"]
+            let roundMode = currentMode === 'mix' ? (Math.random() > 0.5 ? 'maj' : 'min') : currentMode;
+            const rKeyName = keys[Math.floor(Math.random() * keys.length)];
+            const correctArr = musicData[rKeyName][roundMode];
             
-            const modeLabel = roundMode === 'maj' ? "MAJOR" : "MINOR";
-            const modeColor = roundMode === 'maj' ? '#22d3ee' : '#f472b6';
-            
-            // Aggiorna Display
-            uiKey.innerHTML = `${rKey} <span style="font-size:0.5em; color:${modeColor}; display:block; margin-top:5px">${modeLabel}</span>`;
-
-            // 3. Generazione Opzioni in base al TIPO DI QUIZ
             let options = [];
-            
+            ui.grid.innerHTML = '';
+
             if (currentType === 'full') {
-                // --- LOGICA SEQUENZA COMPLETA ---
-                uiGrid.className = 'btn-grid'; // Lista verticale
-                uiTopLabel.textContent = "Select Full Progression";
-                uiSub.textContent = "Identify the II - V - I";
-
-                // Target
-                const correctString = correctArr.join(' - '); // Raw ID
-                currentCorrectAnswer = correctString;
-                options.push({ raw: correctString, html: formatProgression(correctArr) });
-
-                // Distrattori (Sequenze complete di altre chiavi)
+                ui.grid.className = 'btn-grid';
+                ui.top.textContent = "Sequence for:";
+                ui.key.style.color = "var(--accent-cyan)";
+                ui.key.innerHTML = `${rKeyName} <span style="font-size:14px; vertical-align:middle; color:#6b7280">${roundMode.toUpperCase()}</span>`;
+                ui.sub.textContent = "Find the II - V - I";
+                
+                currentCorrectAnswer = correctArr.join(' - ');
+                options.push({raw: currentCorrectAnswer, html: correctArr.join(' <span class="arrow">➝</span> ')});
+                
                 while(options.length < 4) {
-                    const randK = keys[Math.floor(Math.random() * keys.length)];
-                    const randM = Math.random() > 0.5 ? 'maj' : 'min';
-                    const wrongArr = musicData[randK][randM];
-                    const wrongString = wrongArr.join(' - ');
-                    
-                    const exists = options.some(o => o.raw === wrongString);
-                    if (!exists && wrongString !== correctString) {
-                        options.push({ raw: wrongString, html: formatProgression(wrongArr) });
-                    }
+                    let rK = keys[Math.floor(Math.random()*12)], rM = Math.random()>0.5?'maj':'min';
+                    let wArr = musicData[rK][rM];
+                    let wStr = wArr.join(' - ');
+                    if(!options.some(o=>o.raw===wStr)) options.push({raw: wStr, html: wArr.join(' <span class="arrow">➝</span> ')});
                 }
-
             } else {
-                // --- LOGICA SOLO V GRADO ---
-                uiGrid.className = 'btn-grid grid-2x2'; // Griglia quadrata
-                uiTopLabel.textContent = "Identify the V Degree";
-                uiSub.textContent = "Which is the Dominant Chord?";
-
-                // Target (L'accordo centrale, indice 1)
-                const targetChord = correctArr[1];
-                currentCorrectAnswer = targetChord;
-                options.push({ raw: targetChord, html: targetChord });
-
-                // Distrattori (V gradi di ALTRE tonalità, per confondere le idee)
+                ui.grid.className = 'btn-grid grid-2x2';
+                if (currentDirection === 'normal') {
+                    ui.top.textContent = "Target Key:";
+                    ui.key.style.color = "var(--accent-cyan)";
+                    ui.key.innerHTML = `${rKeyName} <span style="font-size:14px; vertical-align:middle; color:#6b7280">${roundMode.toUpperCase()}</span>`;
+                    ui.sub.textContent = "Identify the Dominant (V)";
+                    currentCorrectAnswer = correctArr[1];
+                } else {
+                    ui.top.textContent = "Dominant Chord:";
+                    ui.key.style.color = "var(--accent-gold)";
+                    ui.key.textContent = correctArr[1];
+                    ui.sub.textContent = `Resolves to (${roundMode.toUpperCase()})?`;
+                    currentCorrectAnswer = correctArr[2]; // I Grado
+                }
+                
+                options.push({raw: currentCorrectAnswer, html: currentCorrectAnswer});
                 while(options.length < 4) {
-                    const randK = keys[Math.floor(Math.random() * keys.length)];
-                    // Cerchiamo di mantenere lo stesso modo per rendere difficile il quiz
-                    // Se cerco G7 (Maj), mostrami C7, F7, etc.
-                    // Se cerco G7b9 (Min), mostrami C7b9, F7b9 etc.
-                    const wrongArr = musicData[randK][roundMode]; 
-                    const wrongChord = wrongArr[1]; // Prendo il V grado
-
-                    const exists = options.some(o => o.raw === wrongChord);
-                    if (!exists && wrongChord !== targetChord) {
-                        options.push({ raw: wrongChord, html: wrongChord });
-                    }
+                    let rK = keys[Math.floor(Math.random()*12)];
+                    let wChord = musicData[rK][roundMode][currentDirection === 'normal' ? 1 : 2];
+                    if(!options.some(o=>o.raw===wChord)) options.push({raw: wChord, html: wChord});
                 }
             }
 
-            // Mischia e Renderizza
-            options.sort(() => Math.random() - 0.5);
-
-            uiGrid.innerHTML = '';
-            options.forEach(opt => {
+            options.sort(() => Math.random() - 0.5).forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'chord-btn';
                 btn.innerHTML = opt.html;
-                btn.dataset.raw = opt.raw; 
-                
-                const action = () => handleAnswer(btn, opt.raw);
-                btn.ontouchstart = (e) => { e.preventDefault(); action(); };
-                btn.onclick = action;
-                
-                uiGrid.appendChild(btn);
+                btn.onclick = () => handleAnswer(btn, opt.raw);
+                ui.grid.appendChild(btn);
             });
+            
+            ui.score.textContent = score;
+            ui.progress.textContent = `${questionCount}/30`;
         }
 
-        function handleAnswer(btn, selectedRaw) {
+        function handleAnswer(btn, sel) {
             if(isInputLocked) return;
             isInputLocked = true;
-
-            const isCorrect = (selectedRaw === currentCorrectAnswer);
-
-            if(isCorrect) {
-                btn.classList.add('correct');
-                uiLed.classList.add('on-green');
-                score += 10;
-            } else {
-                btn.classList.add('wrong');
-                uiPanel.classList.add('shake');
-                uiLed.classList.add('on-red');
-            }
             
-            // Rivela corretta
-            const allBtns = uiGrid.children;
-            for (let b of allBtns) {
-                if (b.dataset.raw === currentCorrectAnswer) {
-                    b.classList.add('correct');
-                }
+            const isCorrect = (sel === currentCorrectAnswer);
+            if(isCorrect) {
+                btn.classList.add('correct'); ui.led.classList.add('on-green'); score += 10;
+            } else {
+                btn.classList.add('wrong'); ui.led.classList.add('on-red'); ui.panel.classList.add('shake');
+                Array.from(ui.grid.children).forEach(b => {
+                    if(b.innerHTML.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim() === currentCorrectAnswer.replace(/-/g, "").replace(/\s+/g, " ").trim() || b.innerHTML.includes(currentCorrectAnswer)) {
+                         b.classList.add('correct');
+                    }
+                });
             }
-
-            setTimeout(() => {
-                questionCount++;
-                updateStats();
-                nextQuestion();
-            }, 1500); 
+            setTimeout(() => { questionCount++; nextQuestion(); }, 1200);
         }
 
-        function updateStats() {
-            uiScore.textContent = score;
-            let qShow = questionCount > TOTAL_QUESTIONS ? TOTAL_QUESTIONS : questionCount;
-            uiProgress.textContent = `${qShow}/${TOTAL_QUESTIONS}`;
-        }
-
-        function endGame() {
-            uiFinalScore.textContent = score;
-            uiResults.classList.add('visible');
-        }
-
-        // START
+        updateUIButtons();
         restartGame();
-
     </script>
 </body>
 </html>
